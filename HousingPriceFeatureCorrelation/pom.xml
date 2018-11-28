@@ -5,7 +5,19 @@
   <artifactId>HousingPriceFeatureCorrelation</artifactId>
   <packaging>jar</packaging>
   <version>1.0-SNAPSHOT</version>
-  <name>HousingPriceFeatureCorrelation</name>
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <source>8</source>
+                    <target>8</target>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+    <name>HousingPriceFeatureCorrelation</name>
   <url>http://maven.apache.org</url>
 <properties>
   <hadoop.version>2.9.0</hadoop.version>
@@ -50,11 +62,16 @@
       <version>${hadoop.version}</version>
     </dependency>
 
-     <dependency>
-            <groupId>com.sparkjava</groupId>
-            <artifactId>spark-core</artifactId>
-            <version>2.4</version>
-        </dependency>
+    <dependency>
+          <groupId>org.apache.spark</groupId>
+          <artifactId>spark-core_2.11</artifactId>
+          <version>2.4.0</version>
+    </dependency>
+    <dependency>
+          <groupId>org.apache.spark</groupId>
+          <artifactId>spark-sql_2.11</artifactId>
+          <version>2.4.0</version>
+    </dependency>
   </dependencies>
 </project>
 
