@@ -5,6 +5,7 @@ import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparkSession;
+import org.apache.spark.ml.stat.Correlation;
 
 
 public class HousingPriceFeatureCorrelation {
@@ -21,8 +22,11 @@ public class HousingPriceFeatureCorrelation {
 
         //Load Boston csv to dataset
         Dataset<Row> boston_csv = spark.read().format("csv").option("header","true").load("boston_input_file.csv");
-        //output the contents of the input file
-        boston_csv.show();
+
+        //Correlation Matrix
+        Dataset<Row> corr_matrix= Correlation.corr(boston_csv, "SalePrice");
+        corr_matrix.show();
+
 
 
         sc.stop();
