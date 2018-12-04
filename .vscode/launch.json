@@ -1,0 +1,15 @@
+{
+    "configurations": [
+        {
+            "type": "java",
+            "name": "CodeLens (Launch) - HousingPriceFeatureCorrelation",
+            "request": "launch",
+            "cwd": "${workspaceFolder}",
+            "console": "internalConsole",
+            "stopOnEntry": false,
+            "mainClass": "edu.ucr.cs.cs226.groupC.HousingPriceFeatureCorrelation",
+            "args": "",
+            "projectName": "HousingPriceFeatureCorrelation"
+        }
+    ]
+}
