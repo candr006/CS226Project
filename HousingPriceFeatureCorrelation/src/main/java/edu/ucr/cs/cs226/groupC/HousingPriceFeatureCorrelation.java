@@ -1,5 +1,6 @@
 package edu.ucr.cs.cs226.groupC;
 
+import org.apache.spark.api.java.JavaDoubleRDD;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.ml.stat.Correlation;
@@ -17,16 +18,22 @@ import org.apache.spark.sql.types.Metadata;
 import org.apache.spark.sql.types.StructField;
 import org.apache.spark.sql.types.StructType;
 
+import java.util.Arrays;
+import java.util.List;
+
 import static org.apache.spark.mllib.stat.correlation.Correlations.corr;
+import static org.apache.spark.sql.functions.col;
 import static org.apache.spark.sql.types.DataTypes.IntegerType;
 import static org.apache.spark.sql.types.DataTypes.StringType;
+import org.apache.spark.sql.functions.*;
+import scala.Tuple2;
 
 
 public class HousingPriceFeatureCorrelation {
     public static void main(String[] args) {
 
         JavaSparkContext sc = new JavaSparkContext();
-        JavaRDD<String> data = sc.textFile("boston_input_file.csv");
+        JavaRDD<String> data = sc.textFile("no_header_boston_input_file_numeric_only.csv");
 
         //schema
         StructType customSchema = customSchema = new StructType(new StructField[] {
@@ -82,16 +89,64 @@ public class HousingPriceFeatureCorrelation {
 
 
         //Load Boston csv to dataset
-        Dataset<Row> boston_csv = spark.read()
+        /*Dataset<Row> boston_csv = spark.read()
                 .format("csv")
                 .option("header","true")
                 .schema(customSchema)
-                .load("boston_input_file.csv");
+                .load("boston_input_numeric_only.csv");*/
+
+
+       // Double LotArea= data.getRows(1,1).select(col("LotArea"))
+        int i=1;
+        JavaRDD<Tuple2<Double,Double>> ListArea = data.map(
+                (String line) ->{
+                    String[] fields = line.split(",");
+
+                    if(Double.valueOf(fields[2]) instanceof Double) {
+                        Double d = 0.0;
+                        Double d2 = 0.0;
+                        d = Double.valueOf(fields[2]);
+                        d2 = Double.valueOf(fields[41]);
+                        return new Tuple2<Double, Double>(d, d2);
+                    }
+
+                    return new Tuple2<Double, Double>(0.0,0.0);
+                }
+
+        );
+
+      /*  JavaRDD<Tuple2<Double,Double>> ListArea2 = ListArea.filter(
+                (Tuple2<Double,Double> t) ->
+                {
+
+                    return t!=ListArea.first();
+
+                }
+
+                );*/
+
+
+        List<Double> list1 = Arrays.asList(ListArea.first()._1);
+
+       List<Double> list2 = Arrays.asList(ListArea.first()._2);
+
+
+
+        JavaDoubleRDD seriesX = sc.parallelizeDoubles(list1);
+
+        JavaDoubleRDD seriesY = sc.parallelizeDoubles(list2);
+
+
+
+        Double correlation = Statistics.corr(seriesX.srdd(),seriesY.srdd());
+
+        System.out.println("Correlation is: " + correlation);
 
 
         //Correlation between columns?
-        Dataset<Row> correlated= Correlation.corr(boston_csv, "SalePrice", "pearson");
-        correlated.show();
+
+       // Dataset<Row> correlated= Correlation.corr(boston_csv, "SalePrice", "pearson");
+        //correlated.show();
 
         sc.stop();
     }
