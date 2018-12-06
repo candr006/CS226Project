@@ -1,32 +1,32 @@
 package edu.ucr.cs.cs226.groupC;
 
-import org.apache.spark.api.java.JavaDoubleRDD;
+// import org.apache.spark.api.java.JavaDoubleRDD;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
-import org.apache.spark.ml.stat.Correlation;
-import org.apache.spark.mllib.linalg.Matrix;
-import org.apache.spark.mllib.linalg.Vector;
+// import org.apache.spark.ml.stat.Correlation;
+// import org.apache.spark.mllib.linalg.Matrix;
+// import org.apache.spark.mllib.linalg.Vector;
 import org.apache.spark.mllib.stat.Statistics;
-import org.apache.spark.rdd.RDD;
-import org.apache.spark.sql.Dataset;
-import org.apache.spark.sql.Row;
+// import org.apache.spark.rdd.RDD;
+// import org.apache.spark.sql.Dataset;
+// import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparkSession;
-import org.apache.spark.sql.DataFrameStatFunctions;
-import org.apache.spark.mllib.stat.correlation.Correlation.*;
+// import org.apache.spark.sql.DataFrameStatFunctions;
+// import org.apache.spark.mllib.stat.correlation.Correlation.*;
 import org.apache.spark.sql.types.DataTypes;
 import org.apache.spark.sql.types.Metadata;
 import org.apache.spark.sql.types.StructField;
 import org.apache.spark.sql.types.StructType;
 
-import java.util.Arrays;
-import java.util.List;
+// import java.util.Arrays;
+// import java.util.List;
 
-import static org.apache.spark.mllib.stat.correlation.Correlations.corr;
-import static org.apache.spark.sql.functions.col;
-import static org.apache.spark.sql.types.DataTypes.IntegerType;
-import static org.apache.spark.sql.types.DataTypes.StringType;
-import org.apache.spark.sql.functions.*;
-import scala.Tuple2;
+// import static org.apache.spark.mllib.stat.correlation.Correlations.corr;
+// import static org.apache.spark.sql.functions.col;
+// import static org.apache.spark.sql.types.DataTypes.IntegerType;
+// import static org.apache.spark.sql.types.DataTypes.StringType;
+// import org.apache.spark.sql.functions.*;
+// import scala.Tuple2;
 
 
 public class HousingPriceFeatureCorrelation {
@@ -97,48 +97,28 @@ public class HousingPriceFeatureCorrelation {
 
 
        // Double LotArea= data.getRows(1,1).select(col("LotArea"))
-        int i=1;
-        JavaRDD<Tuple2<Double,Double>> ListArea = data.map(
-                (String line) ->{
-                    String[] fields = line.split(",");
 
-                    if(Double.valueOf(fields[2]) instanceof Double) {
+       JavaRDD<Double> lotArea = data.map(
+                (String line) ->{
+                        String[] fields = line.split(",");
                         Double d = 0.0;
                         Double d2 = 0.0;
                         d = Double.valueOf(fields[2]);
-                        d2 = Double.valueOf(fields[41]);
-                        return new Tuple2<Double, Double>(d, d2);
-                    }
+                        return d;
+                }
 
-                    return new Tuple2<Double, Double>(0.0,0.0);
+        );
+        JavaRDD<Double> salePrices = data.map(
+                (String line) ->{
+                        String[] fields = line.split(",");
+                        Double d2 = 0.0;
+                        d2 = Double.valueOf(fields[41]);
+                        return d2;
                 }
 
         );
 
-      /*  JavaRDD<Tuple2<Double,Double>> ListArea2 = ListArea.filter(
-                (Tuple2<Double,Double> t) ->
-                {
-
-                    return t!=ListArea.first();
-
-                }
-
-                );*/
-
-
-        List<Double> list1 = Arrays.asList(ListArea.first()._1);
-
-       List<Double> list2 = Arrays.asList(ListArea.first()._2);
-
-
-
-        JavaDoubleRDD seriesX = sc.parallelizeDoubles(list1);
-
-        JavaDoubleRDD seriesY = sc.parallelizeDoubles(list2);
-
-
-
-        Double correlation = Statistics.corr(seriesX.srdd(),seriesY.srdd());
+        Double correlation = Statistics.corr(lotArea, salePrices);
 
         System.out.println("Correlation is: " + correlation);
 
