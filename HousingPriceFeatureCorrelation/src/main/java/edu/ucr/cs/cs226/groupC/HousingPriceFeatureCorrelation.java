@@ -9,7 +9,8 @@ import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.mllib.stat.Statistics;
 // import org.apache.spark.rdd.RDD;
 // import org.apache.spark.sql.Dataset;
-// import org.apache.spark.sql.Row;
+import org.apache.spark.sql.Row;
+import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.SparkSession;
 // import org.apache.spark.sql.DataFrameStatFunctions;
 // import org.apache.spark.mllib.stat.correlation.Correlation.*;
@@ -18,22 +19,47 @@ import org.apache.spark.sql.types.Metadata;
 import org.apache.spark.sql.types.StructField;
 import org.apache.spark.sql.types.StructType;
 
-// import java.util.Arrays;
-// import java.util.List;
+import java.util.Arrays;
+import java.util.List;
 
-// import static org.apache.spark.mllib.stat.correlation.Correlations.corr;
-// import static org.apache.spark.sql.functions.col;
-// import static org.apache.spark.sql.types.DataTypes.IntegerType;
-// import static org.apache.spark.sql.types.DataTypes.StringType;
-// import org.apache.spark.sql.functions.*;
-// import scala.Tuple2;
+import static org.apache.spark.mllib.stat.correlation.Correlations.corr;
+import static org.apache.spark.sql.functions.col;
+import static org.apache.spark.sql.types.DataTypes.IntegerType;
+import static org.apache.spark.sql.types.DataTypes.StringType;
+import org.apache.spark.sql.functions.*;
+import scala.Tuple2;
+
+
+
+import java.util.Arrays;
+
+import org.apache.spark.api.java.JavaDoubleRDD;
+import org.apache.spark.api.java.JavaRDD;
+import org.apache.spark.api.java.JavaSparkContext;
+import org.apache.spark.mllib.linalg.Matrix;
+import org.apache.spark.mllib.linalg.Vector;
+import org.apache.spark.mllib.linalg.Vectors;
+import org.apache.spark.mllib.stat.Statistics;
+
+
+import org.apache.spark.sql.SparkSession;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import org.apache.spark.ml.feature.PCA;
+import org.apache.spark.ml.feature.PCAModel;
+import org.apache.spark.ml.feature.VectorAssembler;
+import org.apache.spark.sql.Dataset;
+import org.apache.spark.sql.Row;
 
 
 public class HousingPriceFeatureCorrelation {
     public static void main(String[] args) {
 
         JavaSparkContext sc = new JavaSparkContext();
-        JavaRDD<String> data = sc.textFile("no_header_boston_input_file_numeric_only.csv");
+        sc.setLogLevel("WARN");
+
+        JavaRDD<String> data = sc.textFile("no_header_boston_input_numeric_only.csv");
 
         //schema
         StructType customSchema = customSchema = new StructType(new StructField[] {
@@ -127,6 +153,45 @@ public class HousingPriceFeatureCorrelation {
 
        // Dataset<Row> correlated= Correlation.corr(boston_csv, "SalePrice", "pearson");
         //correlated.show();
+
+
+        // Load and parse data
+        String filePath = "boston_input_numeric_only.csv";
+
+        spark = SparkSession.builder()
+                .master("local[8]")
+                .appName("PCAExpt")
+                .getOrCreate();
+
+        // Loads data.
+        Dataset<Row> inDataset = spark.read()
+                .format("com.databricks.spark.csv")
+                .option("header", "true")
+                .option("inferSchema", true)
+                .load(filePath);
+        ArrayList<String> inputColsList = new ArrayList<String>(Arrays.asList(inDataset.columns()));
+        
+        //Make single features column for feature vectors 
+        inputColsList.remove("class");
+        String[] inputCols = inputColsList.parallelStream().toArray(String[]::new);
+        
+        //Prepare dataset for training with all features in "features" column
+        VectorAssembler assembler = new VectorAssembler().setInputCols(inputCols).setOutputCol("features");
+        Dataset<Row> dataset = assembler.transform(inDataset);
+
+        PCAModel pca = new PCA()
+                .setK(16)
+                .setInputCol("features")
+                .setOutputCol("pcaFeatures")
+                .fit(dataset);
+
+        Dataset<Row> result = pca.transform(dataset).select("pcaFeatures");
+        System.out.println("Explained variance:");
+        System.out.println(pca.explainedVariance());
+        result.show(false);
+        System.out.println("count:" + result.count());
+        
+        spark.stop();
 
         sc.stop();
     }
