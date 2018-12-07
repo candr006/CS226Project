@@ -123,30 +123,41 @@ public class HousingPriceFeatureCorrelation {
 
 
        // Double LotArea= data.getRows(1,1).select(col("LotArea"))
-
-       JavaRDD<Double> lotArea = data.map(
+        JavaRDD<Double> salePrices = data.map(
                 (String line) ->{
+                    String[] fields = line.split(",");
+                    Double d2 = 0.0;
+                    d2 = Double.valueOf(fields[41]);
+                    return d2;
+                }
+
+        );
+
+        //Loop through all features and output correlation between the feature and Sale Price
+       JavaRDD<Double> csv_column=null;
+       Double correlation= null;
+       String[] column_array=new String[]{"Id","MSSubClass","LotFrontage","LotArea","HouseStyle","OverallQual","OverallCond","YearBuilt","YearRemodAdd","MasVnrArea","BsmtSF1","BsmtSF2","BsmtSF","TotalBsmtSF","CentralAir","1stFlrSF","2ndFlrSF","LowQualSF","GrLivArea","BsmtFullBath","BsmtHalfBath","FullBath","HalfBath","BedroomAbvGr","KitchenAbvGr","TotRmsAbvGrd","Fireplaces","GarageYrBlt","GarageCars","GarageArea","PavedDrive","WoodDeckSF","OpenPorchSF","EnclosedPorch","3SsnPorch","ScreenPorch","PoolArea","PoolQC","MiscVal","MoSold","YrSold","SalePrice"};
+       
+        for(int i=1; i<(column_array.length-1); i++){
+           String col_name=column_array[i];
+           int finalI = i;
+           csv_column = data.map(
+                    (String line) -> {
                         String[] fields = line.split(",");
                         Double d = 0.0;
                         Double d2 = 0.0;
-                        d = Double.valueOf(fields[2]);
+                        d = Double.valueOf(fields[finalI]);
                         return d;
-                }
+                    }
 
-        );
-        JavaRDD<Double> salePrices = data.map(
-                (String line) ->{
-                        String[] fields = line.split(",");
-                        Double d2 = 0.0;
-                        d2 = Double.valueOf(fields[41]);
-                        return d2;
-                }
+            );
 
-        );
 
-        Double correlation = Statistics.corr(lotArea, salePrices);
+           correlation = Statistics.corr(csv_column, salePrices);
+           System.out.println("Correlation between feature "+ col_name+" and Sale Price is: " + correlation);
+        }
 
-        System.out.println("Correlation is: " + correlation);
+
 
 
         //Correlation between columns?
