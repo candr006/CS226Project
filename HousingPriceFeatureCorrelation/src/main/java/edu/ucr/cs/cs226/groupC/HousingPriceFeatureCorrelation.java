@@ -1,11 +1,14 @@
 package edu.ucr.cs.cs226.groupC;
 
 // import org.apache.spark.api.java.JavaDoubleRDD;
+import au.com.bytecode.opencsv.CSVReader;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
 // import org.apache.spark.ml.stat.Correlation;
 // import org.apache.spark.mllib.linalg.Matrix;
 // import org.apache.spark.mllib.linalg.Vector;
+import org.apache.spark.mllib.fpm.AssociationRules;
+import org.apache.spark.mllib.fpm.FPGrowthModel;
 import org.apache.spark.mllib.stat.Statistics;
 // import org.apache.spark.rdd.RDD;
 // import org.apache.spark.sql.Dataset;
@@ -19,6 +22,10 @@ import org.apache.spark.sql.types.Metadata;
 import org.apache.spark.sql.types.StructField;
 import org.apache.spark.sql.types.StructType;
 
+import java.io.IOException;
+import java.io.Reader;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
 
@@ -52,8 +59,43 @@ import org.apache.spark.ml.feature.VectorAssembler;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 
+import org.apache.spark.mllib.fpm.AssociationRules;
+import org.apache.spark.mllib.fpm.FPGrowth;
+import org.apache.spark.mllib.fpm.FPGrowthModel;
+
 
 public class HousingPriceFeatureCorrelation {
+
+    public static void FrequentPattern(){
+        JavaSparkContext sc = new JavaSparkContext();
+        JavaRDD<String> data = sc.textFile("no_header_boston_input_numeric_only.csv");
+
+        JavaRDD<FPGrowth.FreqItemset<Double>> SalePriceFI = data.map(
+                (String line) ->{
+                    String[] fields = line.split(",");
+
+                    return new FPGrowth.FreqItemset<>(new Double[] {Double.valueOf(fields[41])}, 15L);
+                }
+
+        );
+
+
+            AssociationRules arules = new AssociationRules()
+                    .setMinConfidence(0.8);
+            JavaRDD<AssociationRules.Rule<Double>> results = arules.run(SalePriceFI);
+
+            for (AssociationRules.Rule<Double> rule : results.collect()) {
+                System.out.println(
+                        rule.javaAntecedent() + " => " + rule.javaConsequent() + ", " + rule.confidence());
+            }
+
+
+        sc.stop();
+
+        return;
+    }
+
+
     public static void main(String[] args) {
 
         JavaSparkContext sc = new JavaSparkContext();
