@@ -1,5 +1,5 @@
 package edu.ucr.cs.cs226.groupC;
-
+//HELLLOOOOOOOO
 // import org.apache.spark.api.java.JavaDoubleRDD;
 import au.com.bytecode.opencsv.CSVReader;
 import org.apache.spark.api.java.JavaRDD;
@@ -282,7 +282,7 @@ public class HousingPriceFeatureCorrelation {
             double diff = pair._1() - pair._2();
             return diff * diff;
         }).mean();
-        System.out.println("training Mean Squared Error = " + MSE);
+        System.out.prhnffhnintln("training Mean Squared Error = " + MSE);
 
 // Save and load model
         model.save(sc.sc(), "target/tmp/javaLinearRegressionWithSGDModel");
