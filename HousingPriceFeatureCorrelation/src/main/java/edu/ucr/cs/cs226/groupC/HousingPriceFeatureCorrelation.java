@@ -63,12 +63,18 @@ import org.apache.spark.mllib.fpm.AssociationRules;
 import org.apache.spark.mllib.fpm.FPGrowth;
 import org.apache.spark.mllib.fpm.FPGrowthModel;
 
+import org.apache.spark.api.java.JavaPairRDD;
+import org.apache.spark.api.java.JavaRDD;
+import org.apache.spark.mllib.linalg.Vectors;
+import org.apache.spark.mllib.regression.LabeledPoint;
+import org.apache.spark.mllib.regression.LinearRegressionModel;
+import org.apache.spark.mllib.regression.LinearRegressionWithSGD;
 
 public class HousingPriceFeatureCorrelation {
 
     public static void FrequentPattern(){
         JavaSparkContext sc = new JavaSparkContext();
-        JavaRDD<String> data = sc.textFile("no_header_boston_input_numeric_only.csv");
+        JavaRDD<String> data = sc.textFile("/no_header_boston_input_numeric_only.csv");
 
         JavaRDD<FPGrowth.FreqItemset<Double>> SalePriceFI = data.map(
                 (String line) ->{
@@ -80,14 +86,14 @@ public class HousingPriceFeatureCorrelation {
         );
 
 
-            AssociationRules arules = new AssociationRules()
-                    .setMinConfidence(0.8);
-            JavaRDD<AssociationRules.Rule<Double>> results = arules.run(SalePriceFI);
+        AssociationRules arules = new AssociationRules()
+                .setMinConfidence(0.8);
+        JavaRDD<AssociationRules.Rule<Double>> results = arules.run(SalePriceFI);
 
-            for (AssociationRules.Rule<Double> rule : results.collect()) {
-                System.out.println(
-                        rule.javaAntecedent() + " => " + rule.javaConsequent() + ", " + rule.confidence());
-            }
+        for (AssociationRules.Rule<Double> rule : results.collect()) {
+            System.out.println(
+                    rule.javaAntecedent() + " => " + rule.javaConsequent() + ", " + rule.confidence());
+        }
 
 
         sc.stop();
@@ -101,7 +107,7 @@ public class HousingPriceFeatureCorrelation {
         JavaSparkContext sc = new JavaSparkContext();
         sc.setLogLevel("WARN");
 
-        JavaRDD<String> data = sc.textFile("no_header_boston_input_numeric_only.csv");
+        JavaRDD<String> data = sc.textFile("/no_header_boston_input_numeric_only.csv");
 
         //schema
         StructType customSchema = customSchema = new StructType(new StructField[] {
@@ -164,7 +170,7 @@ public class HousingPriceFeatureCorrelation {
                 .load("boston_input_numeric_only.csv");*/
 
 
-       // Double LotArea= data.getRows(1,1).select(col("LotArea"))
+        // Double LotArea= data.getRows(1,1).select(col("LotArea"))
         JavaRDD<Double> salePrices = data.map(
                 (String line) ->{
                     String[] fields = line.split(",");
@@ -176,14 +182,14 @@ public class HousingPriceFeatureCorrelation {
         );
 
         //Loop through all features and output correlation between the feature and Sale Price
-       JavaRDD<Double> csv_column=null;
-       Double correlation= null;
-       String[] column_array=new String[]{"Id","MSSubClass","LotFrontage","LotArea","HouseStyle","OverallQual","OverallCond","YearBuilt","YearRemodAdd","MasVnrArea","BsmtSF1","BsmtSF2","BsmtSF","TotalBsmtSF","CentralAir","1stFlrSF","2ndFlrSF","LowQualSF","GrLivArea","BsmtFullBath","BsmtHalfBath","FullBath","HalfBath","BedroomAbvGr","KitchenAbvGr","TotRmsAbvGrd","Fireplaces","GarageYrBlt","GarageCars","GarageArea","PavedDrive","WoodDeckSF","OpenPorchSF","EnclosedPorch","3SsnPorch","ScreenPorch","PoolArea","PoolQC","MiscVal","MoSold","YrSold","SalePrice"};
-       
+        JavaRDD<Double> csv_column=null;
+        Double correlation= null;
+        String[] column_array=new String[]{"Id","MSSubClass","LotFrontage","LotArea","HouseStyle","OverallQual","OverallCond","YearBuilt","YearRemodAdd","MasVnrArea","BsmtSF1","BsmtSF2","BsmtSF","TotalBsmtSF","CentralAir","1stFlrSF","2ndFlrSF","LowQualSF","GrLivArea","BsmtFullBath","BsmtHalfBath","FullBath","HalfBath","BedroomAbvGr","KitchenAbvGr","TotRmsAbvGrd","Fireplaces","GarageYrBlt","GarageCars","GarageArea","PavedDrive","WoodDeckSF","OpenPorchSF","EnclosedPorch","3SsnPorch","ScreenPorch","PoolArea","PoolQC","MiscVal","MoSold","YrSold","SalePrice"};
+
         for(int i=1; i<(column_array.length-1); i++){
-           String col_name=column_array[i];
-           int finalI = i;
-           csv_column = data.map(
+            String col_name=column_array[i];
+            int finalI = i;
+            csv_column = data.map(
                     (String line) -> {
                         String[] fields = line.split(",");
                         Double d = 0.0;
@@ -195,8 +201,8 @@ public class HousingPriceFeatureCorrelation {
             );
 
 
-           correlation = Statistics.corr(csv_column, salePrices);
-           System.out.println("Correlation between feature "+ col_name+" and Sale Price is: " + correlation);
+            correlation = Statistics.corr(csv_column, salePrices);
+            System.out.println("Correlation between feature "+ col_name+" and Sale Price is: " + correlation);
         }
 
 
@@ -204,12 +210,12 @@ public class HousingPriceFeatureCorrelation {
 
         //Correlation between columns?
 
-       // Dataset<Row> correlated= Correlation.corr(boston_csv, "SalePrice", "pearson");
+        // Dataset<Row> correlated= Correlation.corr(boston_csv, "SalePrice", "pearson");
         //correlated.show();
 
 
         // Load and parse data
-        String filePath = "boston_input_numeric_only.csv";
+        String filePath = "/boston_input_numeric_only.csv";
 
         spark = SparkSession.builder()
                 .master("local[8]")
@@ -222,12 +228,13 @@ public class HousingPriceFeatureCorrelation {
                 .option("header", "true")
                 .option("inferSchema", true)
                 .load(filePath);
+
         ArrayList<String> inputColsList = new ArrayList<String>(Arrays.asList(inDataset.columns()));
-        
-        //Make single features column for feature vectors 
+
+        //Make single features column for feature vectors
         inputColsList.remove("class");
         String[] inputCols = inputColsList.parallelStream().toArray(String[]::new);
-        
+
         //Prepare dataset for training with all features in "features" column
         VectorAssembler assembler = new VectorAssembler().setInputCols(inputCols).setOutputCol("features");
         Dataset<Row> dataset = assembler.transform(inDataset);
@@ -243,7 +250,46 @@ public class HousingPriceFeatureCorrelation {
         System.out.println(pca.explainedVariance());
         result.show(false);
         System.out.println("count:" + result.count());
-        
+
+        spark = SparkSession.builder()
+                .master("local[8]")
+                .appName("Regression")
+                .getOrCreate();
+
+        JavaRDD<String> dataReg = sc.textFile("/boston_input_numeric_only.csv");
+        JavaRDD<LabeledPoint> parsedData = dataReg.map(line -> {
+            String[] parts = line.split(",");
+            String[] features = parts[1].split(" ");
+            double[] v = new double[features.length];
+            for (int i = 0; i < features.length - 1; i++) {
+                v[i] = Double.parseDouble(features[i]);
+            }
+            return new LabeledPoint(Double.parseDouble(parts[0]), Vectors.dense(v));
+        });
+        parsedData.cache();
+
+// Building the model
+        int numIterations = 100;
+        double stepSize = 0.00000001;
+        LinearRegressionModel model =
+                LinearRegressionWithSGD.train(JavaRDD.toRDD(parsedData), numIterations, stepSize);
+
+// Evaluate model on training examples and compute training error
+        JavaPairRDD<Double, Double> valuesAndPreds = parsedData.mapToPair(point ->
+                new Tuple2<>(model.predict(point.features()), point.label()));
+
+        double MSE = valuesAndPreds.mapToDouble(pair -> {
+            double diff = pair._1() - pair._2();
+            return diff * diff;
+        }).mean();
+        System.out.println("training Mean Squared Error = " + MSE);
+
+// Save and load model
+        model.save(sc.sc(), "target/tmp/javaLinearRegressionWithSGDModel");
+        LinearRegressionModel sameModel = LinearRegressionModel.load(sc.sc(),
+                "target/tmp/javaLinearRegressionWithSGDModel");
+
+
         spark.stop();
 
         sc.stop();
