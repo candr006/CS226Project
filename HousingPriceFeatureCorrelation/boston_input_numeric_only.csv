@@ -1,4 +1,3 @@
-Id,MSSubClass,LotFrontage,LotArea,HouseStyle,OverallQual,OverallCond,YearBuilt,YearRemodAdd,MasVnrArea,BsmtSF1,BsmtSF2,BsmtSF,TotalBsmtSF,CentralAir,1stFlrSF,2ndFlrSF,LowQualSF,GrLivArea,BsmtFullBath,BsmtHalfBath,FullBath,HalfBath,BedroomAbvGr,KitchenAbvGr,TotRmsAbvGrd,Fireplaces,GarageYrBlt,GarageCars,GarageArea,PavedDrive,WoodDeckSF,OpenPorchSF,EnclosedPorch,3SsnPorch,ScreenPorch,PoolArea,PoolQC,MiscVal,MoSold,YrSold,SalePrice
 1,60,65,8450,2,7,5,2003,2003,196,706,0,150,856,1,856,854,0,1710,1,0,2,1,3,1,8,0,2003,2,548,2,0,61,0,0,0,0,-1,0,2,2008,208500
 2,20,80,9600,1,6,8,1976,1976,0,978,0,284,1262,1,1262,0,0,1262,0,1,2,0,3,1,6,1,1976,2,460,2,298,0,0,0,0,0,-1,0,5,2007,181500
 3,60,68,11250,2,7,5,2001,2002,162,486,0,434,920,1,920,866,0,1786,1,0,2,1,3,1,6,1,2001,2,608,2,0,42,0,0,0,0,-1,0,9,2008,223500

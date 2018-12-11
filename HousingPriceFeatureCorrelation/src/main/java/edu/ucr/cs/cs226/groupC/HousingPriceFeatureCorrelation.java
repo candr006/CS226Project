@@ -256,7 +256,7 @@ public class HousingPriceFeatureCorrelation {
                 .appName("Regression")
                 .getOrCreate();
 
-        JavaRDD<String> dataReg = sc.textFile("/boston_input_numeric_only.csv");
+        JavaRDD<String> dataReg = sc.textFile("/no_header_boston_input_numeric_only.csv");
         JavaRDD<LabeledPoint> parsedData = dataReg.map(line -> {
             String[] parts = line.split(",");
             String[] features = parts[1].split(" ");
@@ -282,7 +282,7 @@ public class HousingPriceFeatureCorrelation {
             double diff = pair._1() - pair._2();
             return diff * diff;
         }).mean();
-        System.out.prhnffhnintln("training Mean Squared Error = " + MSE);
+        System.out.println("training Mean Squared Error = " + MSE);
 
 // Save and load model
         model.save(sc.sc(), "target/tmp/javaLinearRegressionWithSGDModel");
