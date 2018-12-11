@@ -2,11 +2,13 @@ package edu.ucr.cs.cs226.groupC;
 
 // import org.apache.spark.api.java.JavaDoubleRDD;
 import au.com.bytecode.opencsv.CSVReader;
+import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
 // import org.apache.spark.ml.stat.Correlation;
 // import org.apache.spark.mllib.linalg.Matrix;
 // import org.apache.spark.mllib.linalg.Vector;
+import org.apache.spark.api.java.function.Function;
 import org.apache.spark.mllib.fpm.AssociationRules;
 import org.apache.spark.mllib.fpm.FPGrowthModel;
 import org.apache.spark.mllib.stat.Statistics;
@@ -22,7 +24,9 @@ import org.apache.spark.sql.types.Metadata;
 import org.apache.spark.sql.types.StructField;
 import org.apache.spark.sql.types.StructType;
 
+import java.io.FileWriter;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.io.Reader;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -67,27 +71,30 @@ import org.apache.spark.mllib.fpm.FPGrowthModel;
 public class HousingPriceFeatureCorrelation {
 
     public static void FrequentPattern(){
-        JavaSparkContext sc = new JavaSparkContext();
-        JavaRDD<String> data = sc.textFile("no_header_boston_input_numeric_only.csv");
+        SparkConf conf = new SparkConf().setAppName("FP-Growth-ItemFrequency").setMaster("local");
+        JavaSparkContext sc = new JavaSparkContext(conf);
 
-        JavaRDD<FPGrowth.FreqItemset<Double>> SalePriceFI = data.map(
-                (String line) ->{
-                    String[] fields = line.split(",");
+        JavaRDD<String> data = sc.textFile("boston_feature_frequency.csv");
 
-                    return new FPGrowth.FreqItemset<>(new Double[] {Double.valueOf(fields[41])}, 15L);
-                }
-
-        );
-
-
-            AssociationRules arules = new AssociationRules()
-                    .setMinConfidence(0.8);
-            JavaRDD<AssociationRules.Rule<Double>> results = arules.run(SalePriceFI);
-
-            for (AssociationRules.Rule<Double> rule : results.collect()) {
-                System.out.println(
-                        rule.javaAntecedent() + " => " + rule.javaConsequent() + ", " + rule.confidence());
+        JavaRDD<List<String>> features = data.map(new Function<String, List<String>>() {
+            @Override
+            public List<String> call(String v1) throws Exception {
+                String[] parts = v1.split(",");
+                return Arrays.asList(parts);
             }
+        });
+
+
+
+        FPGrowth fpg = new FPGrowth().setMinSupport(0.2).setNumPartitions(1);
+        System.out.println("Now we set up a fpg.");
+
+        FPGrowthModel<String> model = fpg.run(features);
+
+        model.freqItemsets()
+                .toJavaRDD()
+                .map((Function<FPGrowth.FreqItemset<String>, String>) fi -> fi.javaItems() + " -> " + fi.freq())
+                .saveAsTextFile("Frequent_Items_Output.txt");
 
 
         sc.stop();
@@ -96,7 +103,7 @@ public class HousingPriceFeatureCorrelation {
     }
 
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws IOException {
 
         JavaSparkContext sc = new JavaSparkContext();
         sc.setLogLevel("WARN");
@@ -179,7 +186,9 @@ public class HousingPriceFeatureCorrelation {
        JavaRDD<Double> csv_column=null;
        Double correlation= null;
        String[] column_array=new String[]{"Id","MSSubClass","LotFrontage","LotArea","HouseStyle","OverallQual","OverallCond","YearBuilt","YearRemodAdd","MasVnrArea","BsmtSF1","BsmtSF2","BsmtSF","TotalBsmtSF","CentralAir","1stFlrSF","2ndFlrSF","LowQualSF","GrLivArea","BsmtFullBath","BsmtHalfBath","FullBath","HalfBath","BedroomAbvGr","KitchenAbvGr","TotRmsAbvGrd","Fireplaces","GarageYrBlt","GarageCars","GarageArea","PavedDrive","WoodDeckSF","OpenPorchSF","EnclosedPorch","3SsnPorch","ScreenPorch","PoolArea","PoolQC","MiscVal","MoSold","YrSold","SalePrice"};
-       
+        FileWriter fileWriter = new FileWriter("Correlation_Output.csv");
+        PrintWriter printWriter = new PrintWriter(fileWriter);
+
         for(int i=1; i<(column_array.length-1); i++){
            String col_name=column_array[i];
            int finalI = i;
@@ -196,7 +205,8 @@ public class HousingPriceFeatureCorrelation {
 
 
            correlation = Statistics.corr(csv_column, salePrices);
-           System.out.println("Correlation between feature "+ col_name+" and Sale Price is: " + correlation);
+           printWriter.print(col_name+","+correlation);
+           //System.out.println("Correlation between feature "+ col_name+" and Sale Price is: " + correlation);
         }
 
 
@@ -247,6 +257,8 @@ public class HousingPriceFeatureCorrelation {
         spark.stop();
 
         sc.stop();
+
+        FrequentPattern();
     }
 }
 
