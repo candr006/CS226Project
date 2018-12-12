@@ -91,17 +91,17 @@ public class HousingPriceFeatureCorrelation {
             }
         });
 
-//        Function<String,Boolean> filterPredicate = e -> e.contains("gt_100000");
-//
-//        JavaRDD<String> rdd = data.filter(filterPredicate);
-//        rdd.saveAsTextFile("gt_100000.csv");
+        Function<String,Boolean> filterPredicate = e -> e.contains(Filename);
+
+        JavaRDD<String> rdd = data.filter(filterPredicate);
+        rdd.saveAsTextFile(Filename + ".csv");
 
 
 
-//        JavaRDD<String> textFile = sc.textFile("Price Frequency.csv");
-//        JavaPairRDD<String,Integer> counts = textFile.flatMap(s -> Arrays.asList(s.split(" ")).iterator())
-//                .mapToPair(word->new Tuple2<>(word,1)).reduceByKey((a,b) -> a + b);
-//        counts.saveAsTextFile("PriceRange.txt");
+        JavaRDD<String> textFile = sc.textFile("Price Frequency.csv");
+        JavaPairRDD<String,Integer> counts = textFile.flatMap(s -> Arrays.asList(s.split(" ")).iterator())
+                .mapToPair(word->new Tuple2<>(word,1)).reduceByKey((a,b) -> a + b);
+        counts.saveAsTextFile("PriceRange.txt");
 
         FPGrowth fpg = new FPGrowth().setMinSupport(0.9).setNumPartitions(1);
         System.out.println("Now we set up a fpg.");
