@@ -74,7 +74,14 @@ public class HousingPriceFeatureCorrelation {
         SparkConf conf = new SparkConf().setAppName("FP-Growth-ItemFrequency").setMaster("local");
         JavaSparkContext sc = new JavaSparkContext(conf);
 
-        JavaRDD<String> data = sc.textFile("boston_feature_frequency.csv");
+        //      String Filename = "gt_300000.csv";// 87
+        //      String Filename = "gt_200000.csv";//312
+        //      String Filename = "gt_500000.csv";//5
+        String Filename = "lt_100000.csv";//123
+        //         String Filename = "gt_100000.csv";//910
+//        String Filename = "Feature Frequency.csv";
+
+        JavaRDD<String> data = sc.textFile(Filename);
 
         JavaRDD<List<String>> features = data.map(new Function<String, List<String>>() {
             @Override
@@ -84,9 +91,19 @@ public class HousingPriceFeatureCorrelation {
             }
         });
 
+//        Function<String,Boolean> filterPredicate = e -> e.contains("gt_100000");
+//
+//        JavaRDD<String> rdd = data.filter(filterPredicate);
+//        rdd.saveAsTextFile("gt_100000.csv");
 
 
-        FPGrowth fpg = new FPGrowth().setMinSupport(0.2).setNumPartitions(1);
+
+//        JavaRDD<String> textFile = sc.textFile("Price Frequency.csv");
+//        JavaPairRDD<String,Integer> counts = textFile.flatMap(s -> Arrays.asList(s.split(" ")).iterator())
+//                .mapToPair(word->new Tuple2<>(word,1)).reduceByKey((a,b) -> a + b);
+//        counts.saveAsTextFile("PriceRange.txt");
+
+        FPGrowth fpg = new FPGrowth().setMinSupport(0.9).setNumPartitions(1);
         System.out.println("Now we set up a fpg.");
 
         FPGrowthModel<String> model = fpg.run(features);
@@ -94,8 +111,7 @@ public class HousingPriceFeatureCorrelation {
         model.freqItemsets()
                 .toJavaRDD()
                 .map((Function<FPGrowth.FreqItemset<String>, String>) fi -> fi.javaItems() + " -> " + fi.freq())
-                .saveAsTextFile("Frequent_Items_Output.txt");
-
+                .saveAsTextFile("output" + Filename);
 
         sc.stop();
 
